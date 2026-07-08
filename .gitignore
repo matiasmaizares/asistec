@@ -1,0 +1,21 @@
+# Backend build output
+backend/target/
+
+# Frontend dependencies & build output
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# IDE
+.idea/
+*.iml
+frontend/.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local session files
+.claude/
+req.txt
+Innova School - FullStack Senior (2).MD
