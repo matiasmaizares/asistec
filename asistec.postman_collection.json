@@ -1,0 +1,242 @@
+{
+  "info": {
+    "name": "Asistec - Sistema de Asistencia Escolar",
+    "_postman_id": "asistec-collection-v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const pad = n => String(n).padStart(2, '0');",
+          "const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;",
+          "",
+          "const today = new Date();",
+          "pm.collectionVariables.set('today', fmt(today));",
+          "",
+          "const yesterday = new Date(today);",
+          "yesterday.setDate(today.getDate() - 1);",
+          "pm.collectionVariables.set('yesterday', fmt(yesterday));",
+          "",
+          "const weekAgo = new Date(today);",
+          "weekAgo.setDate(today.getDate() - 7);",
+          "pm.collectionVariables.set('weekAgo', fmt(weekAgo));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl",          "value": "http://localhost:8080/api/v1" },
+    { "key": "sectionId_3A",    "value": "63366fb2-f694-42ce-b6de-b18e3bad7450" },
+    { "key": "sectionId_3B",    "value": "d29e1f73-a420-4f4b-8a1e-2c2c5bb37842" },
+    { "key": "sectionId_4A",    "value": "3664b0c7-a873-49ba-a0db-e745a6edf76d" },
+    { "key": "sectionId_4B",    "value": "3ae74105-3d4d-4142-8989-7431576f9158" },
+    { "key": "student_Lucas",    "value": "7fa45ac7-f06b-4dca-9b80-989f5cceaa8a" },
+    { "key": "student_Valentina","value": "5ada8368-cc3d-49ea-bbe4-167f78b3aad9" },
+    { "key": "student_Mateo",    "value": "81b76657-74a5-4031-b22c-fa1c48e2745d" },
+    { "key": "student_Sofia",    "value": "28616f93-7412-4978-89a2-e9f308709a8c" },
+    { "key": "student_Benjamin", "value": "66371183-a6aa-4c9e-ba2e-f4fca5973e05" },
+    { "key": "student_Isabella", "value": "b110243e-5ac7-427f-9923-f363bf8d969e" },
+    { "key": "today",            "value": "" },
+    { "key": "yesterday",        "value": "" },
+    { "key": "weekAgo",          "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Secciones",
+      "item": [
+        {
+          "name": "GET Listar todas las secciones",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/sections",
+            "description": "Devuelve las 4 secciones con su grado. Usado por el profesor para seleccionar su sección."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Módulo A — Profesor",
+      "item": [
+        {
+          "name": "GET Ver asistencia de sección (3°A - hoy)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/{{sectionId_3A}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "{{sectionId_3A}}"]
+            },
+            "description": "Muestra los 6 alumnos de 3°A con su estado del día actual. Si ya fue registrada, muestra los estados. Si no, status = null."
+          }
+        },
+        {
+          "name": "GET Ver asistencia de sección (4°A - hoy, sin registro)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/{{sectionId_4A}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "{{sectionId_4A}}"]
+            },
+            "description": "4°A no tiene asistencia hoy. Todos los alumnos aparecen con status null."
+          }
+        },
+        {
+          "name": "POST Registrar asistencia (3°A - hoy) → 201",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/attendance",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sectionId\": \"{{sectionId_3A}}\",\n  \"date\": \"{{today}}\",\n  \"records\": [\n    { \"studentId\": \"{{student_Lucas}}\",     \"status\": \"PRESENTE\" },\n    { \"studentId\": \"{{student_Valentina}}\", \"status\": \"PRESENTE\" },\n    { \"studentId\": \"{{student_Mateo}}\",     \"status\": \"AUSENTE\"  },\n    { \"studentId\": \"{{student_Sofia}}\",     \"status\": \"TARDANZA\" },\n    { \"studentId\": \"{{student_Benjamin}}\",  \"status\": \"PRESENTE\" },\n    { \"studentId\": \"{{student_Isabella}}\",  \"status\": \"PRESENTE\" }\n  ]\n}"
+            },
+            "description": "Primera vez que se guarda hoy → 201 Created."
+          }
+        },
+        {
+          "name": "POST Corregir asistencia (mismo día) → 200",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/attendance",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sectionId\": \"{{sectionId_3A}}\",\n  \"date\": \"{{today}}\",\n  \"records\": [\n    { \"studentId\": \"{{student_Lucas}}\",     \"status\": \"TARDANZA\" },\n    { \"studentId\": \"{{student_Valentina}}\", \"status\": \"PRESENTE\" },\n    { \"studentId\": \"{{student_Mateo}}\",     \"status\": \"PRESENTE\" },\n    { \"studentId\": \"{{student_Sofia}}\",     \"status\": \"PRESENTE\" },\n    { \"studentId\": \"{{student_Benjamin}}\",  \"status\": \"AUSENTE\"  },\n    { \"studentId\": \"{{student_Isabella}}\",  \"status\": \"PRESENTE\" }\n  ]\n}"
+            },
+            "description": "Corrección del mismo día → 200 OK con mensaje 'actualizada'."
+          }
+        },
+        {
+          "name": "POST ERROR — Fecha pasada → 409",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/attendance",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sectionId\": \"{{sectionId_3A}}\",\n  \"date\": \"{{yesterday}}\",\n  \"records\": [\n    { \"studentId\": \"{{student_Lucas}}\", \"status\": \"PRESENTE\" }\n  ]\n}"
+            },
+            "description": "No se puede editar un día anterior. Espera: 409 CONFLICT con error DATE_NOT_EDITABLE."
+          }
+        },
+        {
+          "name": "POST ERROR — Sección inexistente → 404",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/attendance",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sectionId\": \"00000000-0000-0000-0000-000000000000\",\n  \"date\": \"{{today}}\",\n  \"records\": [\n    { \"studentId\": \"{{student_Lucas}}\", \"status\": \"PRESENTE\" }\n  ]\n}"
+            },
+            "description": "La sección no existe. Espera: 404 NOT FOUND con error SECTION_NOT_FOUND."
+          }
+        },
+        {
+          "name": "POST ERROR — Alumno no pertenece a la sección → 422",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/attendance",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sectionId\": \"{{sectionId_3B}}\",\n  \"date\": \"{{today}}\",\n  \"records\": [\n    { \"studentId\": \"{{student_Lucas}}\", \"status\": \"PRESENTE\" }\n  ]\n}"
+            },
+            "description": "Lucas pertenece a 3°A pero se manda contra 3°B. Espera: 422 con error STUDENT_NOT_IN_SECTION."
+          }
+        },
+        {
+          "name": "POST ERROR — Body inválido (falta sectionId) → 400",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/attendance",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"{{today}}\",\n  \"records\": []\n}"
+            },
+            "description": "Falta sectionId y records está vacío. Espera: 400 BAD REQUEST con error INVALID_REQUEST."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Módulo B — Coordinador",
+      "item": [
+        {
+          "name": "GET Resumen diario (hoy)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/daily",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "daily"]
+            },
+            "description": "Totales de presentes/ausentes/tardanzas por sección. 3°A y 3°B tienen datos, 4°A y 4°B muestran hasAttendance=false."
+          }
+        },
+        {
+          "name": "GET Historial de alumno (Lucas, últimos 7 días)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/students/{{student_Lucas}}/history?from={{weekAgo}}&to={{today}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "students", "{{student_Lucas}}", "history"],
+              "query": [
+                { "key": "from", "value": "{{weekAgo}}" },
+                { "key": "to",   "value": "{{today}}" }
+              ]
+            },
+            "description": "Historial de Lucas Romero en los últimos 7 días."
+          }
+        },
+        {
+          "name": "GET ERROR — Rango de fechas inválido → 400",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/students/{{student_Lucas}}/history?from={{today}}&to={{weekAgo}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "students", "{{student_Lucas}}", "history"],
+              "query": [
+                { "key": "from", "value": "{{today}}" },
+                { "key": "to",   "value": "{{weekAgo}}" }
+              ]
+            },
+            "description": "from > to. Espera: 400 BAD REQUEST con error INVALID_DATE_RANGE."
+          }
+        },
+        {
+          "name": "GET Secciones pendientes (sin asistencia hoy)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/sections/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "sections", "pending"]
+            },
+            "description": "Muestra las secciones que aún no registraron asistencia hoy. Debe retornar 4°A y 4°B (y 3°B si no se guardó)."
+          }
+        },
+        {
+          "name": "GET Stream tiempo real (SSE)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "stream"]
+            },
+            "header": [{ "key": "Accept", "value": "text/event-stream" }],
+            "description": "Conexión SSE. Dejá esta request abierta y guardá asistencia en otra pestaña — vas a recibir el evento 'attendance-updated' en tiempo real."
+          }
+        }
+      ]
+    }
+  ]
+}
