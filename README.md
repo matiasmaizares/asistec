@@ -2,6 +2,8 @@
 
 Prueba técnica para Innova Schools. Módulo de asistencia diaria con dos perfiles: **Profesor** (registra asistencia) y **Coordinador** (consulta reportes en tiempo real).
 
+**Demo en vivo:** [browser-psi-gilt.vercel.app](https://browser-psi-gilt.vercel.app)
+
 ---
 
 ## Instalación y ejecución
