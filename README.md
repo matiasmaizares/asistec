@@ -4,60 +4,34 @@ Prueba técnica para Innova Schools. Módulo de asistencia diaria con dos perfil
 
 ---
 
-## Requisitos previos
-
-| Herramienta | Versión mínima |
-| --- | --- |
-| Java | 17 |
-| Maven | 3.8+ |
-| Node.js | 18+ |
-
-> **No se requiere base de datos externa.** El backend usa H2 en memoria por defecto — arranca solo con Java y Maven, sin instalar nada más.
-
----
-
 ## Instalación y ejecución
 
-### Backend
-
 ```bash
-cd backend
-mvn spring-boot:run
+./start.sh
 ```
 
-El servidor arranca en `http://localhost:8080`. Al iniciar por primera vez, el `DataInitializer` siembra automáticamente:
+Levanta backend y frontend en paralelo. Al terminar:
+
+- Backend: `http://localhost:8080`
+- Frontend: `http://localhost:4200`
+
+`Ctrl+C` detiene ambos procesos.
+
+> **Requisito:** Java 17+, Maven 3.8+ y Node 18+ deben estar instalados. No se requiere base de datos externa — el backend usa H2 en memoria.
+
+Al iniciar, el `DataInitializer` siembra automáticamente:
 
 - 2 grados (3er y 4to), 4 secciones (3°A, 3°B, 4°A, 4°B), 6 estudiantes por sección.
 - Asistencia de los últimos 5 días hábiles para 3°A, 3°B y 4°A.
 - Asistencia de hoy solo para 3°A y 3°B (4°A y 4°B quedan pendientes para hoy).
 
-### Frontend
+### Tests
 
 ```bash
-cd frontend
-npm install
-npm start
+./test.sh
 ```
 
-La app arranca en `http://localhost:4200`. El proxy de Angular redirige `/api` → `http://localhost:8080`.
-
-### Tests backend
-
-```bash
-cd backend
-mvn test
-```
-
-Corre contra H2 en memoria (perfil `test`), sin necesidad de PostgreSQL ni Redis.
-
-### Tests frontend
-
-```bash
-cd frontend
-npx ng test --watch=false --browsers=ChromeHeadless
-```
-
-Requiere Chrome instalado. Corre 8 tests de componente con Karma + Jasmine.
+Corre backend (H2 en memoria, sin dependencias externas) y frontend (Karma + Jasmine, requiere Chrome) de forma secuencial.
 
 ---
 
