@@ -1,0 +1,131 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 001-create-grades
+      author: asistec
+      changes:
+        - createTable:
+            tableName: grades
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_grades_name
+
+  - changeSet:
+      id: 002-create-sections
+      author: asistec
+      changes:
+        - createTable:
+            tableName: sections
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: grade_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_sections_grade
+                    references: grades(id)
+
+  - changeSet:
+      id: 003-create-students
+      author: asistec
+      changes:
+        - createTable:
+            tableName: students
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: section_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_students_section
+                    references: sections(id)
+
+  - changeSet:
+      id: 004-create-attendance-records
+      author: asistec
+      changes:
+        - createTable:
+            tableName: attendance_records
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_attendance_student
+                    references: students(id)
+              - column:
+                  name: section_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_attendance_section
+                    references: sections(id)
+              - column:
+                  name: date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: attendance_records
+            columnNames: student_id, section_id, date
+            constraintName: uk_student_section_date

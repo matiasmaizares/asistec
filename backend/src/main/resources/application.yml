@@ -1,18 +1,21 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:asistec;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:asistec}
+    username: ${DB_USER:asistec}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
-  h2:
-    console:
-      enabled: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      # El esquema lo maneja Liquibase; Hibernate solo valida que las entities
+      # coincidan con lo que Liquibase creó (falla rápido si hay drift).
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
