@@ -26,31 +26,23 @@ public class AttendanceRecordPersistenceAdapter implements AttendanceRecordPort 
     private final StudentJpaRepository studentRepository;
     private final SectionJpaRepository sectionRepository;
     private final AttendanceRecordMapper mapper;
+    private final AttendanceUpsertExecutor upsertExecutor;
 
     public AttendanceRecordPersistenceAdapter(AttendanceRecordJpaRepository repository,
                                                StudentJpaRepository studentRepository,
                                                SectionJpaRepository sectionRepository,
-                                               AttendanceRecordMapper mapper) {
+                                               AttendanceRecordMapper mapper,
+                                               AttendanceUpsertExecutor upsertExecutor) {
         this.repository = repository;
         this.studentRepository = studentRepository;
         this.sectionRepository = sectionRepository;
         this.mapper = mapper;
+        this.upsertExecutor = upsertExecutor;
     }
 
     @Override
     public void upsert(UUID studentId, UUID sectionId, LocalDate date, AttendanceStatus status) {
-        repository.findByStudentIdAndSectionIdAndDate(studentId, sectionId, date)
-                .ifPresentOrElse(
-                        entity -> {
-                            entity.setStatus(status);
-                            repository.save(entity);
-                        },
-                        () -> {
-                            StudentEntity student = studentRepository.getReferenceById(studentId);
-                            SectionEntity section = sectionRepository.getReferenceById(sectionId);
-                            repository.save(new AttendanceRecordEntity(student, section, date, status));
-                        }
-                );
+        upsertExecutor.upsert(studentId, sectionId, date, status);
     }
 
     @Override
