@@ -1,0 +1,11 @@
+# Perfil "dev": correr localmente contra el Postgres/Redis de docker-compose.
+# Los hosts/puertos ya tienen defaults cómodos en application.yml (localhost);
+# acá solo se agrega visibilidad extra para desarrollo.
+spring:
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.innovaschools: DEBUG
+    org.hibernate.SQL: DEBUG

@@ -1,0 +1,16 @@
+# Perfil "prod": sin defaults. Si falta alguna variable de entorno en Railway,
+# el arranque falla con un error claro en vez de conectarse silenciosamente
+# a localhost dentro del contenedor.
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+logging:
+  level:
+    com.innovaschools: INFO

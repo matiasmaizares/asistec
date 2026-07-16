@@ -21,8 +21,8 @@ spring:
       hibernate:
         format_sql: true
 server:
-  port: 8080
-
+  # Railway inyecta PORT en runtime; 8080 queda como default para dev/test local.
+  port: ${PORT:8080}
 
 logging:
   level:

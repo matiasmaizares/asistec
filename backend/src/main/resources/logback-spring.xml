@@ -6,9 +6,14 @@
         </encoder>
     </appender>
 
-    <logger name="com.innovaschools" level="INFO"/>
+    <springProperty scope="context" name="appLogLevel" source="logging.level.com.innovaschools" defaultValue="INFO"/>
+    <springProperty scope="context" name="hibernateLogLevel" source="logging.level.org.hibernate" defaultValue="WARN"/>
+    <springProperty scope="context" name="hibernateSqlLogLevel" source="logging.level.org.hibernate.SQL" defaultValue="WARN"/>
+
+    <logger name="com.innovaschools" level="${appLogLevel}"/>
     <logger name="org.springframework.web" level="WARN"/>
-    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.hibernate" level="${hibernateLogLevel}"/>
+    <logger name="org.hibernate.SQL" level="${hibernateSqlLogLevel}"/>
 
     <root level="WARN">
         <appender-ref ref="CONSOLE"/>

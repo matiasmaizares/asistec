@@ -1,9 +1,19 @@
 #!/bin/bash
 set -e
 
-echo "Iniciando backend en http://localhost:8080 ..."
+if [ ! -f .env ]; then
+  echo "No existe .env — copiando .env.example (revisá los valores antes de usar en serio)."
+  cp .env.example .env
+fi
+
+echo "Levantando Postgres y Redis (docker compose)..."
+docker compose up -d postgres redis
+
+set -a; source .env; set +a
+
+echo "Iniciando backend (perfil dev) en http://localhost:8080 ..."
 cd backend
-mvn spring-boot:run &
+SPRING_PROFILES_ACTIVE=dev mvn spring-boot:run &
 BACKEND_PID=$!
 cd ..
 
