@@ -15,6 +15,9 @@ frontend/.vscode/
 .DS_Store
 Thumbs.db
 
+# Secrets (ver .env.example)
+.env
+
 # Local session files
 .claude/
 req.txt
