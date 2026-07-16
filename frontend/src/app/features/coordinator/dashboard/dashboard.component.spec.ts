@@ -4,6 +4,7 @@ import { of, NEVER } from 'rxjs';
 import { DashboardComponent } from './dashboard.component';
 import { AttendanceService } from '../../../core/services/attendance.service';
 import { AttendanceStreamService } from '../../../core/services/attendance-stream.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 describe('DashboardComponent — resumen del coordinador', () => {
   let fixture: ComponentFixture<DashboardComponent>;
@@ -29,6 +30,10 @@ describe('DashboardComponent — resumen del coordinador', () => {
         {
           provide: AttendanceStreamService,
           useValue: { stream: () => NEVER },
+        },
+        {
+          provide: AuthService,
+          useValue: { logout: () => of(undefined) },
         },
         {
           provide: Router,

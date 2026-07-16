@@ -35,9 +35,10 @@ class AttendanceControllerIntegrationTest {
 
     private SectionEntity section;
     private StudentEntity student;
+    private String authHeader;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         attendanceRepo.deleteAll();
         studentRepo.deleteAll();
         sectionRepo.deleteAll();
@@ -46,6 +47,17 @@ class AttendanceControllerIntegrationTest {
         GradeEntity grade = gradeRepo.save(new GradeEntity("3er Grado"));
         section = sectionRepo.save(new SectionEntity("A", grade));
         student = studentRepo.save(new StudentEntity("Lucas", "Romero", section));
+
+        // Coordinador: no depende de que la sección de prueba tenga un docente
+        // asignado (a diferencia de un DOCENTE, que solo puede tocar su sección).
+        String body = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"coordinador@asistec.local","password":"coordinador123"}"""))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String accessToken = objectMapper.readTree(body).get("accessToken").asText();
+        authHeader = "Bearer " + accessToken;
     }
 
     @Test
@@ -58,6 +70,7 @@ class AttendanceControllerIntegrationTest {
         );
 
         mockMvc.perform(post("/api/v1/attendance")
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -75,6 +88,7 @@ class AttendanceControllerIntegrationTest {
 
         // First save
         mockMvc.perform(post("/api/v1/attendance")
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -88,6 +102,7 @@ class AttendanceControllerIntegrationTest {
         );
 
         mockMvc.perform(post("/api/v1/attendance")
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(correction)))
                 .andExpect(status().isOk())
@@ -104,6 +119,7 @@ class AttendanceControllerIntegrationTest {
         );
 
         mockMvc.perform(post("/api/v1/attendance")
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
@@ -120,6 +136,7 @@ class AttendanceControllerIntegrationTest {
         );
 
         mockMvc.perform(post("/api/v1/attendance")
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
@@ -128,7 +145,8 @@ class AttendanceControllerIntegrationTest {
 
     @Test
     void getSectionsWithoutAttendanceToday_returnsPendingSections() throws Exception {
-        mockMvc.perform(get("/api/v1/reports/sections/pending"))
+        mockMvc.perform(get("/api/v1/reports/sections/pending")
+                        .header("Authorization", authHeader))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
     }

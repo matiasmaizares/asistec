@@ -2,9 +2,12 @@ package com.innovaschools.asistec.domain.service;
 
 import com.innovaschools.asistec.domain.exception.DateNotEditableException;
 import com.innovaschools.asistec.domain.exception.IncompleteAttendanceException;
+import com.innovaschools.asistec.domain.exception.NotAssignedToSectionException;
 import com.innovaschools.asistec.domain.exception.SectionNotFoundException;
 import com.innovaschools.asistec.domain.exception.StudentNotInSectionException;
+import com.innovaschools.asistec.domain.model.Section;
 import com.innovaschools.asistec.domain.model.Student;
+import com.innovaschools.asistec.domain.model.TeacherRole;
 import com.innovaschools.asistec.domain.port.in.RegisterAttendanceUseCase;
 import com.innovaschools.asistec.domain.port.out.AttendanceEventPort;
 import com.innovaschools.asistec.domain.port.out.AttendanceRecordPort;
@@ -48,8 +51,13 @@ public class RegisterAttendanceService implements RegisterAttendanceUseCase {
             throw new DateNotEditableException();
         }
 
-        sectionPort.findById(command.sectionId())
+        Section section = sectionPort.findById(command.sectionId())
                 .orElseThrow(() -> new SectionNotFoundException(command.sectionId()));
+
+        if (command.callerRole() == TeacherRole.DOCENTE
+                && !command.callerId().equals(section.getAssignedTeacherId())) {
+            throw new NotAssignedToSectionException(command.sectionId());
+        }
 
         Set<UUID> sectionStudentIds = studentPort.findBySectionId(command.sectionId())
                 .stream()

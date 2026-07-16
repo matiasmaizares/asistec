@@ -2,9 +2,13 @@ package com.innovaschools.asistec.infrastructure.adapter.in.rest;
 
 import com.innovaschools.asistec.domain.exception.DateNotEditableException;
 import com.innovaschools.asistec.domain.exception.IncompleteAttendanceException;
+import com.innovaschools.asistec.domain.exception.InvalidCredentialsException;
 import com.innovaschools.asistec.domain.exception.InvalidDateRangeException;
+import com.innovaschools.asistec.domain.exception.InvalidTokenException;
+import com.innovaschools.asistec.domain.exception.NotAssignedToSectionException;
 import com.innovaschools.asistec.domain.exception.SectionNotFoundException;
 import com.innovaschools.asistec.domain.exception.StudentNotInSectionException;
+import com.innovaschools.asistec.domain.exception.TooManyAttemptsException;
 import com.innovaschools.asistec.infrastructure.adapter.in.rest.dto.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,5 +72,36 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .orElse("Datos de entrada inválidos");
         return ErrorResponse.of("INVALID_REQUEST", detail);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ErrorResponse.of("INVALID_CREDENTIALS", ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleInvalidToken(InvalidTokenException ex) {
+        return ErrorResponse.of("INVALID_TOKEN", ex.getMessage());
+    }
+
+    @ExceptionHandler(NotAssignedToSectionException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleNotAssignedToSection(NotAssignedToSectionException ex) {
+        return ErrorResponse.of("NOT_ASSIGNED_TO_SECTION", ex.getMessage());
+    }
+
+    @ExceptionHandler(TooManyAttemptsException.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public ErrorResponse handleTooManyAttempts(TooManyAttemptsException ex) {
+        return ErrorResponse.of("TOO_MANY_ATTEMPTS", ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleUnexpected(Exception ex) {
+        log.error("Error no manejado", ex);
+        return ErrorResponse.of("INTERNAL_ERROR", "Ocurrió un error inesperado");
     }
 }

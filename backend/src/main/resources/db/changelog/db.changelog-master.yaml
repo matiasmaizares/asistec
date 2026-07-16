@@ -129,3 +129,54 @@ databaseChangeLog:
             tableName: attendance_records
             columnNames: student_id, section_id, date
             constraintName: uk_student_section_date
+
+  - changeSet:
+      id: 005-create-teachers
+      author: asistec
+      changes:
+        - createTable:
+            tableName: teachers
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: full_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_teachers_email
+              - column:
+                  name: password_hash
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 006-add-assigned-teacher-to-sections
+      author: asistec
+      changes:
+        - addColumn:
+            tableName: sections
+            columns:
+              - column:
+                  name: assigned_teacher_id
+                  type: uuid
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_sections_assigned_teacher
+                    references: teachers(id)

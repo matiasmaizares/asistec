@@ -23,6 +23,10 @@ public class SectionEntity {
     @JoinColumn(name = "grade_id", nullable = false)
     private GradeEntity grade;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_teacher_id")
+    private TeacherEntity assignedTeacher;
+
     public SectionEntity(String name, GradeEntity grade) {
         this.name = name;
         this.grade = grade;

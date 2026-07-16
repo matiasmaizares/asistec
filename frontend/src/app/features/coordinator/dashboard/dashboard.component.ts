@@ -5,6 +5,7 @@ import { StudentHistoryComponent } from '../student-history/student-history.comp
 import { Subscription } from 'rxjs';
 import { AttendanceService } from '../../../core/services/attendance.service';
 import { AttendanceStreamService } from '../../../core/services/attendance-stream.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { SectionSummary } from '../../../core/models/attendance.model';
 
 @Component({
@@ -14,7 +15,7 @@ import { SectionSummary } from '../../../core/models/attendance.model';
   template: `
     <div class="page">
       <header class="header">
-        <button class="back-btn" (click)="goBack()">← <span class="back-label">Salir</span></button>
+        <button class="back-btn" (click)="logout()">← <span class="back-label">Cerrar sesión</span></button>
         <div>
           <h1>📊 Panel del Coordinador</h1>
           <p>Asistencia del día — {{ formattedDate }}</p>
@@ -162,6 +163,7 @@ import { SectionSummary } from '../../../core/models/attendance.model';
 export class DashboardComponent implements OnInit, OnDestroy {
   private attendanceService = inject(AttendanceService);
   private streamService = inject(AttendanceStreamService);
+  private authService = inject(AuthService);
   private router = inject(Router);
 
   today = new Date();
@@ -217,7 +219,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  goBack() {
-    this.router.navigate(['/']);
+  logout() {
+    this.authService.logout().subscribe(() => this.router.navigate(['/login']));
   }
 }

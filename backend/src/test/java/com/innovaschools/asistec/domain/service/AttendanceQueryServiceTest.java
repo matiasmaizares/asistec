@@ -35,7 +35,7 @@ class AttendanceQueryServiceTest {
     void setUp() {
         sectionId = UUID.randomUUID();
         Grade grade = new Grade(UUID.randomUUID(), "3er Grado");
-        section = new Section(sectionId, "A", grade);
+        section = new Section(sectionId, "A", grade, null);
     }
 
     @Test

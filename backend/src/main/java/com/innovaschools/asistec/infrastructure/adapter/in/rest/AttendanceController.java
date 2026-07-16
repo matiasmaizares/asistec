@@ -1,6 +1,7 @@
 package com.innovaschools.asistec.infrastructure.adapter.in.rest;
 
 import com.innovaschools.asistec.domain.model.AttendanceStatus;
+import com.innovaschools.asistec.domain.model.TeacherRole;
 import com.innovaschools.asistec.domain.port.in.GetSectionAttendanceUseCase;
 import com.innovaschools.asistec.domain.port.in.RegisterAttendanceUseCase;
 import com.innovaschools.asistec.infrastructure.adapter.in.rest.dto.AttendanceResponse;
@@ -9,6 +10,9 @@ import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -36,8 +40,17 @@ public class AttendanceController {
                 .map(r -> new RegisterAttendanceUseCase.Command.StudentEntry(r.studentId(), r.status()))
                 .toList();
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UUID callerId = UUID.fromString(authentication.getName());
+        TeacherRole callerRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(a -> a.startsWith("ROLE_"))
+                .map(a -> TeacherRole.valueOf(a.substring(5)))
+                .findFirst()
+                .orElseThrow();
+
         RegisterAttendanceUseCase.Command command = new RegisterAttendanceUseCase.Command(
-                request.sectionId(), request.date(), entries);
+                request.sectionId(), request.date(), entries, callerId, callerRole);
 
         RegisterAttendanceUseCase.Result result = registerAttendanceUseCase.register(command);
 

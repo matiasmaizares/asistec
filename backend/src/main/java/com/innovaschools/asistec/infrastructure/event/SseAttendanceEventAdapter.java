@@ -24,12 +24,17 @@ public class SseAttendanceEventAdapter {
 
     public static final String CHANNEL = "attendance-updates";
 
+    // Antes no tenía timeout (Long.MAX_VALUE): una conexión SSE nunca expiraba,
+    // lo que permitía agotar hilos/memoria abriendo muchas conexiones y dejándolas
+    // colgadas. El EventSource del browser reconecta solo ante un timeout/corte.
+    private static final long EMITTER_TIMEOUT_MS = 30 * 60 * 1000L;
+
     private static final Logger log = LoggerFactory.getLogger(SseAttendanceEventAdapter.class);
 
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
     public SseEmitter subscribe() {
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        SseEmitter emitter = new SseEmitter(EMITTER_TIMEOUT_MS);
         emitters.add(emitter);
         emitter.onCompletion(() -> { emitters.remove(emitter); log.info("SSE: emitter completado | activos={}", emitters.size()); });
         emitter.onTimeout(()  -> { emitters.remove(emitter); log.info("SSE: emitter por timeout | activos={}", emitters.size()); });

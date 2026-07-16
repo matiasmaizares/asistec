@@ -24,6 +24,16 @@ server:
   # Railway inyecta PORT en runtime; 8080 queda como default para dev/test local.
   port: ${PORT:8080}
 
+jwt:
+  secret: ${JWT_SECRET:dev-only-secret-do-not-use-in-production-min-32-bytes}
+  access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+  # true en prod (HTTPS); false acá para no romper el flujo por cookie en dev http.
+  cookie-secure: ${JWT_COOKIE_SECURE:false}
+
+frontend:
+  origin: ${FRONTEND_ORIGIN:http://localhost:4200}
+
 logging:
   level:
     com.innovaschools: INFO

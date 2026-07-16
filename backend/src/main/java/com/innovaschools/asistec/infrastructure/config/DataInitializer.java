@@ -1,9 +1,11 @@
 package com.innovaschools.asistec.infrastructure.config;
 
 import com.innovaschools.asistec.domain.model.AttendanceStatus;
+import com.innovaschools.asistec.domain.model.TeacherRole;
 import com.innovaschools.asistec.infrastructure.adapter.out.persistence.entity.*;
 import com.innovaschools.asistec.infrastructure.adapter.out.persistence.repository.*;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,8 @@ public class DataInitializer implements CommandLineRunner {
     private final SectionJpaRepository sectionRepo;
     private final StudentJpaRepository studentRepo;
     private final AttendanceRecordJpaRepository attendanceRepo;
+    private final TeacherJpaRepository teacherRepo;
+    private final PasswordEncoder passwordEncoder;
 
     private static final AttendanceStatus[] STATUSES = {
         AttendanceStatus.PRESENTE, AttendanceStatus.PRESENTE, AttendanceStatus.PRESENTE,
@@ -30,11 +34,15 @@ public class DataInitializer implements CommandLineRunner {
     public DataInitializer(GradeJpaRepository gradeRepo,
                            SectionJpaRepository sectionRepo,
                            StudentJpaRepository studentRepo,
-                           AttendanceRecordJpaRepository attendanceRepo) {
+                           AttendanceRecordJpaRepository attendanceRepo,
+                           TeacherJpaRepository teacherRepo,
+                           PasswordEncoder passwordEncoder) {
         this.gradeRepo = gradeRepo;
         this.sectionRepo = sectionRepo;
         this.studentRepo = studentRepo;
         this.attendanceRepo = attendanceRepo;
+        this.teacherRepo = teacherRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // Fixed UUIDs so the Postman collection works on any fresh database.
@@ -50,6 +58,12 @@ public class DataInitializer implements CommandLineRunner {
     private static final UUID ID_STU_SOFIA     = UUID.fromString("28616f93-7412-4978-89a2-e9f308709a8c");
     private static final UUID ID_STU_BENJAMIN  = UUID.fromString("66371183-a6aa-4c9e-ba2e-f4fca5973e05");
     private static final UUID ID_STU_ISABELLA  = UUID.fromString("b110243e-5ac7-427f-9923-f363bf8d969e");
+    // Teachers (credenciales de demo — password: "docente123"/"coordinador123")
+    private static final UUID ID_TEACHER_COORDINADOR = UUID.fromString("1a2b3c4d-0001-4000-8000-000000000001");
+    private static final UUID ID_TEACHER_3A = UUID.fromString("1a2b3c4d-0001-4000-8000-000000000002");
+    private static final UUID ID_TEACHER_3B = UUID.fromString("1a2b3c4d-0001-4000-8000-000000000003");
+    private static final UUID ID_TEACHER_4A = UUID.fromString("1a2b3c4d-0001-4000-8000-000000000004");
+    private static final UUID ID_TEACHER_4B = UUID.fromString("1a2b3c4d-0001-4000-8000-000000000005");
 
     @Override
     @Transactional
@@ -59,13 +73,25 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seed() {
+        TeacherEntity coordinador = saveTeacher(ID_TEACHER_COORDINADOR, "Ana Coordinadora",
+                "coordinador@asistec.local", "coordinador123", TeacherRole.COORDINADOR);
+        TeacherEntity docente3A = saveTeacher(ID_TEACHER_3A, "Profesor 3ero A",
+                "docente.3a@asistec.local", "docente123", TeacherRole.DOCENTE);
+        TeacherEntity docente3B = saveTeacher(ID_TEACHER_3B, "Profesor 3ero B",
+                "docente.3b@asistec.local", "docente123", TeacherRole.DOCENTE);
+        TeacherEntity docente4A = saveTeacher(ID_TEACHER_4A, "Profesor 4to A",
+                "docente.4a@asistec.local", "docente123", TeacherRole.DOCENTE);
+        TeacherEntity docente4B = saveTeacher(ID_TEACHER_4B, "Profesor 4to B",
+                "docente.4b@asistec.local", "docente123", TeacherRole.DOCENTE);
+
         GradeEntity grade3 = gradeRepo.save(new GradeEntity("3er Grado"));
         GradeEntity grade4 = gradeRepo.save(new GradeEntity("4to Grado"));
 
-        SectionEntity sec3A = saveSection(ID_SEC_3A, "A", grade3);
-        SectionEntity sec3B = saveSection(ID_SEC_3B, "B", grade3);
-        SectionEntity sec4A = saveSection(ID_SEC_4A, "A", grade4);
-        SectionEntity sec4B = saveSection(ID_SEC_4B, "B", grade4);
+        SectionEntity sec3A = saveSection(ID_SEC_3A, "A", grade3, docente3A);
+        SectionEntity sec3B = saveSection(ID_SEC_3B, "B", grade3, docente3B);
+        SectionEntity sec4A = saveSection(ID_SEC_4A, "A", grade4, docente4A);
+        SectionEntity sec4B = saveSection(ID_SEC_4B, "B", grade4, docente4B);
+        // coordinador (docente.coordinador) no tiene sección asignada: ve/gestiona todas.
 
         List<StudentEntity> students3A = createStudents(sec3A,
             new Object[]{ID_STU_LUCAS,     "Lucas Romero"},
@@ -103,10 +129,17 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private SectionEntity saveSection(UUID id, String name, GradeEntity grade) {
+    private SectionEntity saveSection(UUID id, String name, GradeEntity grade, TeacherEntity assignedTeacher) {
         SectionEntity section = new SectionEntity(name, grade);
         section.setId(id);
+        section.setAssignedTeacher(assignedTeacher);
         return sectionRepo.save(section);
+    }
+
+    private TeacherEntity saveTeacher(UUID id, String fullName, String email, String rawPassword, TeacherRole role) {
+        TeacherEntity teacher = new TeacherEntity(fullName, email, passwordEncoder.encode(rawPassword), role);
+        teacher.setId(id);
+        return teacherRepo.save(teacher);
     }
 
     /** Accepts either String "First Last" or Object[]{ UUID, "First Last" }. */

@@ -2,6 +2,7 @@ package com.innovaschools.asistec.domain.service;
 
 import com.innovaschools.asistec.domain.exception.DateNotEditableException;
 import com.innovaschools.asistec.domain.exception.IncompleteAttendanceException;
+import com.innovaschools.asistec.domain.exception.NotAssignedToSectionException;
 import com.innovaschools.asistec.domain.exception.SectionNotFoundException;
 import com.innovaschools.asistec.domain.exception.StudentNotInSectionException;
 import com.innovaschools.asistec.domain.model.*;
@@ -35,6 +36,7 @@ class RegisterAttendanceServiceTest {
 
     private UUID sectionId;
     private UUID studentId;
+    private UUID coordinatorId;
     private Section section;
     private Student student;
 
@@ -42,8 +44,9 @@ class RegisterAttendanceServiceTest {
     void setUp() {
         sectionId = UUID.randomUUID();
         studentId = UUID.randomUUID();
+        coordinatorId = UUID.randomUUID();
         Grade grade = new Grade(UUID.randomUUID(), "3er Grado");
-        section = new Section(sectionId, "A", grade);
+        section = new Section(sectionId, "A", grade, null);
         student = new Student(studentId, "Lucas", "Romero", sectionId);
     }
 
@@ -57,7 +60,8 @@ class RegisterAttendanceServiceTest {
         RegisterAttendanceUseCase.Command command = new RegisterAttendanceUseCase.Command(
                 sectionId,
                 LocalDate.now(),
-                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE))
+                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE)),
+                coordinatorId, TeacherRole.COORDINADOR
         );
 
         RegisterAttendanceUseCase.Result result = service.register(command);
@@ -81,7 +85,8 @@ class RegisterAttendanceServiceTest {
         RegisterAttendanceUseCase.Command command = new RegisterAttendanceUseCase.Command(
                 sectionId,
                 LocalDate.now(),
-                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE))
+                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE)),
+                coordinatorId, TeacherRole.COORDINADOR
         );
 
         RegisterAttendanceUseCase.Result result = service.register(command);
@@ -95,7 +100,8 @@ class RegisterAttendanceServiceTest {
         RegisterAttendanceUseCase.Command command = new RegisterAttendanceUseCase.Command(
                 sectionId,
                 LocalDate.now().minusDays(1),
-                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE))
+                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE)),
+                coordinatorId, TeacherRole.COORDINADOR
         );
 
         assertThatThrownBy(() -> service.register(command))
@@ -111,7 +117,8 @@ class RegisterAttendanceServiceTest {
         RegisterAttendanceUseCase.Command command = new RegisterAttendanceUseCase.Command(
                 sectionId,
                 LocalDate.now(),
-                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE))
+                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE)),
+                coordinatorId, TeacherRole.COORDINADOR
         );
 
         assertThatThrownBy(() -> service.register(command))
@@ -127,7 +134,8 @@ class RegisterAttendanceServiceTest {
         RegisterAttendanceUseCase.Command command = new RegisterAttendanceUseCase.Command(
                 sectionId,
                 LocalDate.now(),
-                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE))
+                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE)),
+                coordinatorId, TeacherRole.COORDINADOR
         );
 
         assertThatThrownBy(() -> service.register(command))
@@ -143,10 +151,53 @@ class RegisterAttendanceServiceTest {
         RegisterAttendanceUseCase.Command command = new RegisterAttendanceUseCase.Command(
                 sectionId,
                 LocalDate.now(),
-                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(otherStudentId, AttendanceStatus.PRESENTE))
+                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(otherStudentId, AttendanceStatus.PRESENTE)),
+                coordinatorId, TeacherRole.COORDINADOR
         );
 
         assertThatThrownBy(() -> service.register(command))
                 .isInstanceOf(StudentNotInSectionException.class);
+    }
+
+    @Test
+    void register_docenteNotAssignedToSection_throwsNotAssignedToSectionException() {
+        UUID otherTeacherId = UUID.randomUUID();
+        when(sectionPort.findById(sectionId)).thenReturn(Optional.of(section));
+
+        RegisterAttendanceUseCase.Command command = new RegisterAttendanceUseCase.Command(
+                sectionId,
+                LocalDate.now(),
+                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE)),
+                otherTeacherId, TeacherRole.DOCENTE
+        );
+
+        assertThatThrownBy(() -> service.register(command))
+                .isInstanceOf(NotAssignedToSectionException.class);
+
+        verifyNoInteractions(attendanceRecordPort, eventPort);
+    }
+
+    @Test
+    void register_docenteAssignedToSection_succeeds() {
+        UUID assignedTeacherId = UUID.randomUUID();
+        Grade grade = new Grade(UUID.randomUUID(), "3er Grado");
+        Section assignedSection = new Section(sectionId, "A", grade, assignedTeacherId);
+
+        when(sectionPort.findById(sectionId)).thenReturn(Optional.of(assignedSection));
+        when(studentPort.findBySectionId(sectionId)).thenReturn(List.of(student));
+        when(attendanceRecordPort.findBySectionAndDate(sectionId, LocalDate.now()))
+                .thenReturn(List.of());
+
+        RegisterAttendanceUseCase.Command command = new RegisterAttendanceUseCase.Command(
+                sectionId,
+                LocalDate.now(),
+                List.of(new RegisterAttendanceUseCase.Command.StudentEntry(studentId, AttendanceStatus.PRESENTE)),
+                assignedTeacherId, TeacherRole.DOCENTE
+        );
+
+        RegisterAttendanceUseCase.Result result = service.register(command);
+
+        assertThat(result.isNew()).isTrue();
+        verify(attendanceRecordPort).upsert(studentId, sectionId, LocalDate.now(), AttendanceStatus.PRESENTE);
     }
 }

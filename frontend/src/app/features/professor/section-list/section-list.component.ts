@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SectionService } from '../../../core/services/section.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Section } from '../../../core/models/section.model';
 
 @Component({
@@ -11,7 +12,7 @@ import { Section } from '../../../core/models/section.model';
   template: `
     <div class="page">
       <header class="header">
-        <button class="back-btn" (click)="goBack()">← <span class="back-label">Salir</span></button>
+        <button class="back-btn" (click)="logout()">← <span class="back-label">Cerrar sesión</span></button>
         <div>
           <h1>👨‍🏫 Panel del Profesor</h1>
           <p>Seleccioná tu sección para registrar asistencia</p>
@@ -76,6 +77,7 @@ import { Section } from '../../../core/models/section.model';
 })
 export class SectionListComponent implements OnInit {
   private sectionService = inject(SectionService);
+  private authService = inject(AuthService);
   private router = inject(Router);
 
   sections: Section[] = [];
@@ -92,7 +94,7 @@ export class SectionListComponent implements OnInit {
     this.router.navigate(['/professor/attendance', section.id]);
   }
 
-  goBack() {
-    this.router.navigate(['/']);
+  logout() {
+    this.authService.logout().subscribe(() => this.router.navigate(['/login']));
   }
 }

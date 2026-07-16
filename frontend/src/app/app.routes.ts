@@ -1,10 +1,15 @@
 import { Routes } from '@angular/router';
-import { RoleSelectorComponent } from './features/role-selector/role-selector.component';
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
-  { path: '', component: RoleSelectorComponent },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/login/login.component').then((m) => m.LoginComponent),
+  },
   {
     path: 'professor',
+    canActivate: [roleGuard('DOCENTE')],
     children: [
       {
         path: '',
@@ -24,10 +29,12 @@ export const routes: Routes = [
   },
   {
     path: 'coordinator',
+    canActivate: [roleGuard('COORDINADOR')],
     loadComponent: () =>
       import('./features/coordinator/dashboard/dashboard.component').then(
         m => m.DashboardComponent
       ),
   },
-  { path: '**', redirectTo: '' },
+  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  { path: '**', redirectTo: 'login' },
 ];
