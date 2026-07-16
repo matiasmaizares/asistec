@@ -1,6 +1,5 @@
 package com.innovaschools.asistec.infrastructure.event;
 
-import com.innovaschools.asistec.domain.port.out.AttendanceEventPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -14,8 +13,16 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Mantiene los SseEmitter conectados a ESTA instancia del backend y hace el
+ * fan-out local. Quien decide CUÁNDO se dispara ese fan-out ya no es esta
+ * clase: puede venir de Redis (RedisAttendanceEventPublisher + AttendanceRedisListener,
+ * perfil productivo) o de forma directa (LocalAttendanceEventPublisher, perfil "test").
+ */
 @Component
-public class SseAttendanceEventAdapter implements AttendanceEventPort {
+public class SseAttendanceEventAdapter {
+
+    public static final String CHANNEL = "attendance-updates";
 
     private static final Logger log = LoggerFactory.getLogger(SseAttendanceEventAdapter.class);
 
@@ -36,8 +43,7 @@ public class SseAttendanceEventAdapter implements AttendanceEventPort {
         return emitter;
     }
 
-    @Override
-    public void publishAttendanceUpdated(UUID sectionId, LocalDate date) {
+    public void broadcastLocal(UUID sectionId, LocalDate date) {
         List<SseEmitter> dead = new ArrayList<>();
         for (SseEmitter emitter : emitters) {
             try {

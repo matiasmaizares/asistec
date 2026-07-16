@@ -2,6 +2,11 @@ spring:
   datasource:
     url: jdbc:h2:mem:asistec;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   h2:
     console:
       enabled: false
